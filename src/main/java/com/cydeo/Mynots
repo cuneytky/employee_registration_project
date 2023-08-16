@@ -1,0 +1,69 @@
+validation için:
+- pom.xml e git ve ekle(depend.)
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-validation</artifactId>
+        </dependency>
+
+- hangi variablelerın validation olmasını istersin belirle (employee sayfasında)
+ //    @NotNull        --->    Field shouldn't be null
+//    @NotEmpty       --->    Field shouldn't be ""
+//    @NotBlank       --->    Field shouldn't be "       "
+
+//    @NotNull -> @NotNull
+//    @NotEmpty -> @NotNull + @NotEmpty
+//    @NotBlank -> @NotNull + @NotEmpty + @NotBlank
+
+
+- bunların görülebilmesi için de emploee conroller içinde metod attribute ile beraber @Valid ekledik: @Valid Employee employee
+- Valid bir durum olması halinde ne yapması gerktiğini de BindingResult bindingResult ile if(){} oluşturduk
+- burada hata olması halinde aynı sayfanın gelmesi için yolu end pointle belirledik: return "employee/employee-create";
+- fakat state kısmı gelmedi onun da gelmesi için tanımladık: model.addAttribute("stateList",DataGenerator.getAllStates());
+- bu attribute view olması içinde Model model ekledik.
+- son hali:
+  @PostMapping("/insert")
+    public String insertEmployee(@ModelAttribute("employee") @Valid Employee employee, BindingResult bindingResult, Model model) {
+
+        if (bindingResult.hasErrors()) {
+            model.addAttribute("stateList", DataGenerator.getAllStates());
+            return "employee/employee-create";
+        }
+
+        employeeService.saveEmployee(employee);
+        return "redirect:/employee/list";   // With redirect we are using endpoints
+    }
+
+*  backend tarafında hatayı tanımladık ama UI görünen birşey yok. BUnun için de:
+
+- resources > messages.properties sf oluşturduk:
+#Property Name
+# yourObjectName.objectField
+
+employee.firstName = First name
+employee.lastName = Last name
+
+####################
+
+#Pattern
+# ValidationAnnotationName.yourObjectName.objectField
+
+NotBlank.employee.firstName = {0} is a required field.
+# First name is a required field.
+Size.employee.firstName = {0} can have max {1} and min {2} characters.
+# First name can have max 12 and min 2 characters.
+
+# Last name example:
+#NotBlank.employee.lastName = {0} is a required field.
+
+
+burada mesajı yazdık bu mesajı .html sayfasına ekledik.
+
+            <div class="form-group col">
+              <label for="inputFirstName4">First Name</label>
+              <input type="text" class="form-control" id="inputFirstName4" placeholder="First Name" th:field="*{firstName}">
+              <div class="text-danger" th:if="${#fields.hasErrors('firstName')}">
+                <ol>
+                  <li th:each="error : ${#fields.errors('firstName')}" th:text="${error}"></li>
+                </ol>
+              </div>
+            </div
